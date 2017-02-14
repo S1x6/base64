@@ -15,40 +15,43 @@ void encode(Input* in)
 	int readBytes = 0;
 	int n = 0;
 	int f = in->string_break;
+	char toWrite = 0;
 	while (!feof(fin))
 	{
 		readBytes = fread_s(buf, sizeof(buf), sizeof(char), 3, fin);
 		if (readBytes == 3)
-		{
-			fprintf(fout, "%c", alph[buf[0] >> 2]);
+		{	
+			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4) ) & 0x3f ]); 
+			fwrite(&alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[(((buf[1] << 4) >> 2) | (buf[2] >> 6) ) & 0x3F ]);
+			fwrite(&alph[(((buf[1] << 4) >> 2) | (buf[2] >> 6)) & 0x3F], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[buf[2] & 0x3F]); 
+			fwrite(&alph[buf[2] & 0x3F], sizeof(char), 1, fout); 
 			breakStr(&n, f, fout);
 		} 
 		else if (readBytes == 2)
 		{
-			fprintf(fout, "%c", alph[buf[0] >> 2]);
+			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4)) & 0x3f]);
+			fwrite(&alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[((buf[1] << 4) >> 2) & 0x3F]);
+			fwrite(&alph[((buf[1] << 4) >> 2) & 0x3F], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", '=');
+			toWrite = '=';
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 		}
 		else if (readBytes == 1)
 		{
-			fprintf(fout, "%c", alph[buf[0] >> 2]);
+			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", alph[((buf[0] << 6) >> 2) & 0x3f]);
+			fwrite(&alph[((buf[0] << 6) >> 2) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", '=');
+			toWrite = '=';
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fprintf(fout, "%c", '=');
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 		}
 	}
@@ -100,7 +103,8 @@ void breakStr(int* n, int divider, FILE* out)
 {
 	*n = *n + 1;
 	if (divider != 0 && (*n % divider) == 0) {
-		fprintf(out, "\n");
+		char a = '\n';
+		fwrite(&a, sizeof(char), 1, out);
 		*n = 0;
 	}
 }
