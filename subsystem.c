@@ -63,6 +63,7 @@ void decode(Input* in)
 	FILE* fout = fopen(in->output, "wb");
 	int n = 0, equals = 0;
 	char* buf = calloc(4, sizeof(char));
+	char toWrite = 0;
 	while (!feof(fin))
 	{
 		equals = readBytes(buf, 4, in->ignore, fin);
@@ -71,16 +72,22 @@ void decode(Input* in)
 		switch (equals)
 		{
 		case 0:
-			fprintf(fout, "%c", (buf[0] << 2) | (buf[1] >> 4));
-			fprintf(fout, "%c", (buf[1] << 4) | (buf[2] >> 2));
-			fprintf(fout, "%c", (buf[2] << 6) | buf[3]);
+			toWrite = (buf[0] << 2) | (buf[1] >> 4);
+			fwrite(&toWrite, sizeof(char), 1, fout);
+			toWrite = (buf[1] << 4) | (buf[2] >> 2);
+			fwrite(&toWrite, sizeof(char), 1, fout);
+			toWrite = ((buf[2] << 6) | buf[3]);
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			break;
 		case 1:
-			fprintf(fout, "%c", (buf[0] << 2) | (buf[1] >> 4));
-			fprintf(fout, "%c", (buf[1] << 4) | (buf[2] >> 2));
+			toWrite = (buf[0] << 2) | (buf[1] >> 4);
+			fwrite(&toWrite, sizeof(char), 1, fout);
+			toWrite = (buf[1] << 4) | (buf[2] >> 2);
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			break;
 		case 2:
-			fprintf(fout, "%c", (buf[0] << 2) | (buf[1] >> 4));
+			toWrite = (buf[0] << 2) | (buf[1] >> 4);
+			fwrite(&toWrite, sizeof(char), 1, fout);
 			break;
 		}
 
