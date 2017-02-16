@@ -1,5 +1,9 @@
 #include "subsystem.h"
 
+void decode(Input* in);
+void breakStr(int* n, int devider, FILE* out);
+int readBytes(char* dest, int count, int ign, FILE* file);
+char getNumFromB64(char c);
 
 void encode(Input* in)
 {
@@ -7,10 +11,10 @@ void encode(Input* in)
 	FILE* fout = fopen(in->output, "wb");
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char* buf = calloc(3, sizeof(char));
-	int readBytes = 0; // ñêîëüêî áàéò áûëî ñ÷èòàíî
-	int n = 0; // ñ÷åò÷èê ïåðåíîñà ñòðîê
+	int readBytes = 0; // сколько байт было считано
+	int n = 0; // счетчик переноса строк
 	int f = in->string_break;
-	char toWrite = 0; //õðàíèëèùå ñèìâîëà äëÿ çàïèñûâàíèÿ
+	char toWrite = 0; //хранилище символа для записывания
 	
 	while (!feof(fin))
 	{
@@ -18,7 +22,7 @@ void encode(Input* in)
 		if (readBytes == 3)
 		{
 			fwrite(&alph[(buf[0] >> 2) & 0x3f], sizeof(char), 1, fout);
-			breakStr(&n, f, fout); //ïðîâåðêà íåîáõîäèìîñòè ïåðåíîñà ñòðîêè 
+			breakStr(&n, f, fout); //проверка необходимости переноса строки 
 			fwrite(&alph[((((buf[0] << 6) >> 2) & 0x30) | ((buf[1] >> 4) & 0x0f)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 			fwrite(&alph[((((buf[1] << 4) >> 2) & 0x3c ) | ((buf[2] >> 6) & 0x03) ) & 0x3F], sizeof(char), 1, fout);
@@ -98,7 +102,7 @@ void decode(Input* in)
 
 
 
-void breakStr(int* n, int divider, FILE* out) // óâåëè÷èâàåò ñ÷åò÷èê è, åñëè îí êðàòåí ïàðàìåòðó f, òî âñòàâëÿåòñÿ ïåðåíîñ ñòðîêè
+void breakStr(int* n, int divider, FILE* out) // увеличивает счетчик и, если он кратен параметру f, то вставляется перенос строки
 {
 	*n = *n + 1;
 	if (divider != 0 && (*n % divider) == 0) {
@@ -116,11 +120,11 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 		do {
 			readBytes = 0;
 			readBytes = fread_s(&tmp, sizeof(tmp), sizeof(char), 1, file);
-			if (!readBytes) //ïðîâåðêà êîíöà ôàéëà
+			if (!readBytes) //проверка конца файла
 				break;
-			if (tmp == '=') { // åñëè "=" òî ïðîâåðÿþòñÿ ñëåäóþùèå ñèìâîëû, åñëè íå "=" è íå êîíåö ôàéëà òî îøèáêà
+			if (tmp == '=') { // если "=" то проверяются следующие символы, если не "=" и не конец файла то ошибка
 				char* buf = calloc(2,sizeof(char)); 
-				int a = fread(buf, sizeof(char), 2, file); // a - êîëè÷åñòâî ñ÷èòàííûõ ñèìâîëîâ
+				int a = fread(buf, sizeof(char), 2, file); // a - количество считанных символов
 				if (a == 0) {
 					e++;
 					break;
