@@ -148,7 +148,7 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 }
 
 
-char getNumFromB64(char c) //âîçâðàùàåò ÷èñëî ïî ñ÷èòàííîìó ñèìâîëó èç àëôàâèòà èëè -1 åñëè ñèìâîë íå èç àëôàâèòà
+char getNumFromB64(char c) //возвращает число по считанному символу из алфавита или -1 если символ не из алфавита
 {
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char i = 0;
