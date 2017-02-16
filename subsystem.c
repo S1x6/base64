@@ -1,9 +1,5 @@
 #include "subsystem.h"
 
-void decode(Input* in);
-void breakStr(int* n, int devider, FILE* out);
-int readBytes(char* dest, int count, int ign, FILE* file);
-char getNumFromB64(char c);
 
 void encode(Input* in)
 {
@@ -11,10 +7,10 @@ void encode(Input* in)
 	FILE* fout = fopen(in->output, "wb");
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char* buf = calloc(3, sizeof(char));
-	int readBytes = 0; // сколько байт было считано
-	int n = 0; // счетчик переноса строк
+	int readBytes = 0; // Г±ГЄГ®Г«ГјГЄГ® ГЎГ Г©ГІ ГЎГ»Г«Г® Г±Г·ГЁГІГ Г­Г®
+	int n = 0; // Г±Г·ГҐГІГ·ГЁГЄ ГЇГҐГ°ГҐГ­Г®Г±Г  Г±ГІГ°Г®ГЄ
 	int f = in->string_break;
-	char toWrite = 0; //хранилище символа для записывания
+	char toWrite = 0; //ГµГ°Г Г­ГЁГ«ГЁГ№ГҐ Г±ГЁГ¬ГўГ®Г«Г  Г¤Г«Гї Г§Г ГЇГЁГ±Г»ГўГ Г­ГЁГї
 	
 	while (!feof(fin))
 	{
@@ -22,7 +18,7 @@ void encode(Input* in)
 		if (readBytes == 3)
 		{
 			fwrite(&alph[(buf[0] >> 2) & 0x3f], sizeof(char), 1, fout);
-			breakStr(&n, f, fout); //проверка необходимости переноса строки 
+			breakStr(&n, f, fout); //ГЇГ°Г®ГўГҐГ°ГЄГ  Г­ГҐГ®ГЎГµГ®Г¤ГЁГ¬Г®Г±ГІГЁ ГЇГҐГ°ГҐГ­Г®Г±Г  Г±ГІГ°Г®ГЄГЁ 
 			fwrite(&alph[((((buf[0] << 6) >> 2) & 0x30) | ((buf[1] >> 4) & 0x0f)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 			fwrite(&alph[((((buf[1] << 4) >> 2) & 0x3c ) | ((buf[2] >> 6) & 0x03) ) & 0x3F], sizeof(char), 1, fout);
@@ -102,7 +98,7 @@ void decode(Input* in)
 
 
 
-void breakStr(int* n, int divider, FILE* out) // увеличивает счетчик и, если он кратен параметру f, то вставляется перенос строки
+void breakStr(int* n, int divider, FILE* out) // ГіГўГҐГ«ГЁГ·ГЁГўГ ГҐГІ Г±Г·ГҐГІГ·ГЁГЄ ГЁ, ГҐГ±Г«ГЁ Г®Г­ ГЄГ°Г ГІГҐГ­ ГЇГ Г°Г Г¬ГҐГІГ°Гі f, ГІГ® ГўГ±ГІГ ГўГ«ГїГҐГІГ±Гї ГЇГҐГ°ГҐГ­Г®Г± Г±ГІГ°Г®ГЄГЁ
 {
 	*n = *n + 1;
 	if (divider != 0 && (*n % divider) == 0) {
@@ -120,11 +116,11 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 		do {
 			readBytes = 0;
 			readBytes = fread_s(&tmp, sizeof(tmp), sizeof(char), 1, file);
-			if (!readBytes) //проверка конца файла
+			if (!readBytes) //ГЇГ°Г®ГўГҐГ°ГЄГ  ГЄГ®Г­Г¶Г  ГґГ Г©Г«Г 
 				break;
-			if (tmp == '=') { // если "=" то проверяются следующие символы, если не "=" и не конец файла то ошибка
+			if (tmp == '=') { // ГҐГ±Г«ГЁ "=" ГІГ® ГЇГ°Г®ГўГҐГ°ГїГѕГІГ±Гї Г±Г«ГҐГ¤ГіГѕГ№ГЁГҐ Г±ГЁГ¬ГўГ®Г«Г», ГҐГ±Г«ГЁ Г­ГҐ "=" ГЁ Г­ГҐ ГЄГ®Г­ГҐГ¶ ГґГ Г©Г«Г  ГІГ® Г®ГёГЁГЎГЄГ 
 				char* buf = calloc(2,sizeof(char)); 
-				int a = fread(buf, sizeof(char), 2, file); // a - количество считанных символов
+				int a = fread(buf, sizeof(char), 2, file); // a - ГЄГ®Г«ГЁГ·ГҐГ±ГІГўГ® Г±Г·ГЁГІГ Г­Г­Г»Гµ Г±ГЁГ¬ГўГ®Г«Г®Гў
 				if (a == 0) {
 					e++;
 					break;
@@ -152,7 +148,7 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 }
 
 
-char getNumFromB64(char c) //возвращает число по считанному символу из алфавита или -1 если символ не из алфавита
+char getNumFromB64(char c) //ГўГ®Г§ГўГ°Г Г№Г ГҐГІ Г·ГЁГ±Г«Г® ГЇГ® Г±Г·ГЁГІГ Г­Г­Г®Г¬Гі Г±ГЁГ¬ГўГ®Г«Гі ГЁГ§ Г Г«ГґГ ГўГЁГІГ  ГЁГ«ГЁ -1 ГҐГ±Г«ГЁ Г±ГЁГ¬ГўГ®Г« Г­ГҐ ГЁГ§ Г Г«ГґГ ГўГЁГІГ 
 {
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char i = 0;
