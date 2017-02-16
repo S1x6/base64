@@ -1,6 +1,5 @@
 #include "subsystem.h"
 
-void copyBit(char a, char* b, int i, int j);
 void decode(Input* in);
 void breakStr(int* n, int devider, FILE* out);
 int readBytes(char* dest, int count, int ign, FILE* file);
@@ -12,31 +11,32 @@ void encode(Input* in)
 	FILE* fout = fopen(in->output, "wb");
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char* buf = calloc(3, sizeof(char));
-	int readBytes = 0;
-	int n = 0;
+	int readBytes = 0; // сколько байт было считано
+	int n = 0; // счетчик переноса строк
 	int f = in->string_break;
-	char toWrite = 0;
+	char toWrite = 0; //хранилище символа дл€ записывани€
+	
 	while (!feof(fin))
 	{
-		readBytes = fread_s(buf, sizeof(buf), sizeof(char), 3, fin);
+		readBytes = fread(buf, sizeof(char), 3, fin);
 		if (readBytes == 3)
-		{	
-			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
+		{
+			fwrite(&alph[(buf[0] >> 2) & 0x3f], sizeof(char), 1, fout);
+			breakStr(&n, f, fout); //проверка необходимости переноса строки 
+			fwrite(&alph[((((buf[0] << 6) >> 2) & 0x30) | ((buf[1] >> 4) & 0x0f)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fwrite(&alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4)) & 0x3f], sizeof(char), 1, fout);
-			breakStr(&n, f, fout);
-			fwrite(&alph[(((buf[1] << 4) >> 2) | (buf[2] >> 6)) & 0x3F], sizeof(char), 1, fout);
+			fwrite(&alph[((((buf[1] << 4) >> 2) & 0x3c ) | ((buf[2] >> 6) & 0x03) ) & 0x3F], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 			fwrite(&alph[buf[2] & 0x3F], sizeof(char), 1, fout); 
 			breakStr(&n, f, fout);
-		} 
+		}
 		else if (readBytes == 2)
 		{
-			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
+			fwrite(&alph[(buf[0] >> 2) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fwrite(&alph[(((buf[0] << 6) >> 2) | (buf[1] >> 4)) & 0x3f], sizeof(char), 1, fout);
+			fwrite(&alph[((((buf[0] << 6) >> 2) & 0x30) | ((buf[1] >> 4) & 0x0f)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fwrite(&alph[((buf[1] << 4) >> 2) & 0x3F], sizeof(char), 1, fout);
+			fwrite(&alph[((((buf[1] << 4) >> 2) & 0x3c) | ((buf[2] >> 6) & 0x03)) & 0x3F], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 			toWrite = '=';
 			fwrite(&toWrite, sizeof(char), 1, fout);
@@ -44,9 +44,9 @@ void encode(Input* in)
 		}
 		else if (readBytes == 1)
 		{
-			fwrite(&alph[buf[0] >> 2], sizeof(char), 1, fout);
+			fwrite(&alph[(buf[0] >> 2) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
-			fwrite(&alph[((buf[0] << 6) >> 2) & 0x3f], sizeof(char), 1, fout);
+			fwrite(&alph[((((buf[0] << 6) >> 2) & 0x30) | ((buf[1] >> 4) & 0x0f)) & 0x3f], sizeof(char), 1, fout);
 			breakStr(&n, f, fout);
 			toWrite = '=';
 			fwrite(&toWrite, sizeof(char), 1, fout);
@@ -55,6 +55,7 @@ void encode(Input* in)
 			breakStr(&n, f, fout);
 		}
 	}
+
 	fclose(fin);
 	fclose(fout);
 }
@@ -95,11 +96,13 @@ void decode(Input* in)
 		}
 
 	}
+	fclose(fin);
+	fclose(fout);
 }
 
 
 
-void breakStr(int* n, int divider, FILE* out)
+void breakStr(int* n, int divider, FILE* out) // увеличивает счетчик и, если он кратен параметру f, то вставл€етс€ перенос строки
 {
 	*n = *n + 1;
 	if (divider != 0 && (*n % divider) == 0) {
@@ -117,11 +120,11 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 		do {
 			readBytes = 0;
 			readBytes = fread_s(&tmp, sizeof(tmp), sizeof(char), 1, file);
-			if (!readBytes)
+			if (!readBytes) //проверка конца файла
 				break;
-			if (tmp == '=') {
-				char* buf = calloc(2,sizeof(char));
-				int a = fread(buf, sizeof(char), 2, file);
+			if (tmp == '=') { // если "=" то провер€ютс€ следующие символы, если не "=" и не конец файла то ошибка
+				char* buf = calloc(2,sizeof(char)); 
+				int a = fread(buf, sizeof(char), 2, file); // a - количество считанных символов
 				if (a == 0) {
 					e++;
 					break;
@@ -137,7 +140,7 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 				} else 
 					fseek(file, -2, SEEK_CUR);
 			}
-			if (!ign && getNumFromB64(tmp) == -1 && tmp != '=' && tmp != '\n')
+			if (!ign && getNumFromB64(tmp) == -1 && tmp != '=') 
 			{
 				printf("Invalid character found");
 				exit(0);
@@ -149,17 +152,7 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 }
 
 
-void copyBit(char a, char* b, int i, int j) //копирует i-ый бит числа а в j-ый бит числа b (справа)
-{
-	char tmp;
-	tmp = a & (1 << (i - 1));
-	if (tmp)
-		*b |= 1 << (j-1);
-	else
-		*b &= ~(1 << (j-1));
-}
-
-char getNumFromB64(char c)
+char getNumFromB64(char c) //возвращает число по считанному символу из алфавита или -1 если символ не из алфавита
 {
 	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	char i = 0;
