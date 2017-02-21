@@ -1,6 +1,6 @@
 #include "subsystem.h"
 
-char * fillTable(const char * filler)
+unsigned char * fillTable(const char * filler)
 {
 	char * table = malloc(sizeof(char)*256);
 	int i = 0;
@@ -76,9 +76,10 @@ void decode(Input* in)
 	int n = 0, equals = 0;
 	char* buf = calloc(4, sizeof(char));
 	char toWrite = 0;
+	char * table = fillTable("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 	while (!feof(fin))
 	{
-		equals = readBytes(buf, 4, in->ignore, fin);
+		equals = readBytes(buf, 4, in->ignore, table, fin);
 		if (buf[0] == -1)
 			break;
 		switch (equals)
@@ -120,7 +121,7 @@ void breakStr(int* n, int divider, FILE* out) // увеличивает счет
 	}
 }
 
-int readBytes(char* dest, int count, int ign, FILE* file)
+int readBytes(char* dest, int count, int ign, char * table, FILE* file)
 {
 	char tmp = 0;
 	int i = 0, e = 0, readBytes = 0;;
@@ -148,26 +149,14 @@ int readBytes(char* dest, int count, int ign, FILE* file)
 				} else 
 					fseek(file, -2, SEEK_CUR);
 			}
-			if (!ign && getNumFromB64(tmp) == -1 && tmp != '=') 
+			if (!ign && table[tmp] == 65 && tmp != '=') 
 			{
 				printf("Invalid character found");
 				exit(0);
 			}
-		} while (getNumFromB64(tmp) == -1);
-		dest[i] = getNumFromB64(tmp);
+		} while (table[tmp] == 65);
+		dest[i] = table[tmp];
 	}
 	return e;
 }
 
-
-char getNumFromB64(char c) //возвращает число по считанному символу из алфавита или -1 если символ не из алфавита
-{
-	const char* alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	char i = 0;
-	for (; i < 64; i++)
-	{
-		if (alph[i] == c)
-			return i;
-	}
-	return -1;
-}
