@@ -13,10 +13,12 @@ Input* parseArgs(int argc, char* argv[])
 		}
 		if (!strcmp(argv[i], "-d") && res->mode == NONE) {
 			res->mode = DECODE;
-			res->input = argv[i + 1];
-			res->output = argv[i + 2];
-			i += 2;
-			continue;
+			if (argc >= i + 2) {
+				res->input = argv[i + 1];
+				res->output = argv[i + 2];
+				i += 2;
+				continue;
+			} else return NULL;
 		}
 		if (!strcmp(argv[i], "-i")) {
 			res->ignore = 1;
@@ -24,10 +26,12 @@ Input* parseArgs(int argc, char* argv[])
 		}
 		if (!strcmp(argv[i], "-e") && res->mode == NONE) {
 			res->mode = ENCODE;
-			res->input = argv[i + 1];
-			res->output = argv[i + 2];
-			i += 2;
-			continue;
+			if (argc >= i + 2) {
+				res->input = argv[i + 1];
+				res->output = argv[i + 2];
+				i += 2;
+				continue;
+			} else return NULL;
 		}
 		else return NULL;
 	}
