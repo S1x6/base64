@@ -1,9 +1,17 @@
 #include "subsystem.h"
 
-void decode(Input* in);
-void breakStr(int* n, int devider, FILE* out);
-int readBytes(char* dest, int count, int ign, FILE* file);
-char getNumFromB64(char c);
+char * fillTable(const char * filler)
+{
+	char * table = malloc(sizeof(char)*256);
+	int i = 0;
+	int length = strlen(filler);
+	for (; 	i < 255; i++)
+		table[i] = 65;
+	for (i = 0; i < length; i++) {
+		table[filler[i]] = i;	
+	}
+	return table;
+}
 
 void encode(Input* in)
 {
