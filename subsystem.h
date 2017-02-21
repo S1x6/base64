@@ -1,6 +1,7 @@
 #ifndef _SUBSYSTEM_H
 #define _SUBSYSTEM_H
 #include "parsing.h"
+#include <string.h>
 
 void decode(Input* in);
 void breakStr(int* n, int devider, FILE* out);
